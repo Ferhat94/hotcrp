@@ -12090,24 +12090,38 @@ function transfer_form_values(dstform, srcform, names) {
 
 
 // login UI
+//handle_ui.on("js-signin", function (evt) {
+//    const oevt = (evt && evt.originalEvent) || evt,
+//        submitter = oevt.submitter, form = this;
+//    if (submitter && submitter.formNoValidate) {
+//        return;
+//    }
+//    $(form).find("button").prop("disabled", true);
+//    evt.preventDefault();
+//    $.get(hoturl("api/session"), function () {
+//        if (!submitter) {
+//            form.submit();
+//            return;
+//        }
+//        submitter.disabled = false;
+//        submitter.formNoValidate = true;
+//        submitter.click();
+//        submitter.disabled = true;
+//    });
+//});
+
 handle_ui.on("js-signin", function (evt) {
-    const oevt = (evt && evt.originalEvent) || evt,
-        submitter = oevt.submitter, form = this;
-    if (submitter && submitter.formNoValidate) {
-        return;
-    }
+    // --- BEGIN SIMPLIFIED FIX ---
+    // Instead of the complex session check, we will
+    // just submit the form directly.
+
+    // Disable the button to prevent double-clicks
+    const form = this;
     $(form).find("button").prop("disabled", true);
-    evt.preventDefault();
-    $.get(hoturl("api/session"), function () {
-        if (!submitter) {
-            form.submit();
-            return;
-        }
-        submitter.disabled = false;
-        submitter.formNoValidate = true;
-        submitter.click();
-        submitter.disabled = true;
-    });
+
+    // Directly submit the form
+    form.submit();
+    // --- END SIMPLIFIED FIX ---
 });
 
 handle_ui.on("js-no-signin", function () {

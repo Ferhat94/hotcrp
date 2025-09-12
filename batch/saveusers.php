@@ -102,6 +102,17 @@ class SaveUsers_Batch {
             $this->ustatus->csvreq = $line;
             $this->ustatus->parse_csv_group("");
             if ($this->ustatus->execute_update()) {
+
+                // --- BEGIN MODIFICATION ---
+                // Check if a password was provided in the CSV and set it.
+                if (isset($line["password"]) && $line["password"] !== "") {
+                    $this->ustatus->user->change_password($line["password"]);
+                    if (!$this->quiet) {
+                        fwrite(STDOUT, "{$this->ustatus->user->email}: Password set\n");
+                    }
+                }
+                // --- END MODIFICATION ---
+                
                 if ($this->quiet) {
                     // print nothing
                 } else if (empty($this->ustatus->diffs)) {

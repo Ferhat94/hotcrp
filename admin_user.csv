@@ -1,0 +1,2 @@
+email,firstName,lastName,password,roles
+admin@example.com,Admin,User,MySecurePass123,chair sysadmin
