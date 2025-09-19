@@ -1,0 +1,21 @@
+email,firstName,lastName,password,roles,affiliation
+author3@example.com,David,Davis,pass123,,University of Science
+author4@example.com,Eve,Evans,pass123,,Institute of Arts
+pc_member2@example.com,Frank,Franklin,pass123,pc,University of Science
+pc_member3@example.com,Grace,Green,pass123,pc,State University
+pc_member4@example.com,Heidi,Hill,pass123,pc,State University
+author5@example.com,Ivan,Ivanov,pass123,,Tech Research Global
+author6@example.com,Judy,Jacobs,pass123,,Coastal University
+author7@example.com,Ken,King,pass123,,Northern Institute
+pc_member5@example.com,Laura,Lee,pass123,pc,Tech Research Global
+pc_member6@example.com,Mike,Miller,pass123,pc,Coastal University
+pc_member7@example.com,Nancy,Nelson,pass123,pc,Northern Institute
+pc_member8@example.com,Oscar,Olson,pass123,pc,University of Science
+author8@example.com,Pat,Patel,pass123,,State University
+author9@example.com,Quinn,Queen,pass123,,Institute of Arts
+author10@example.com,Rachel,Reed,pass123,,Tech Research Global
+pc_member9@example.com,Sam,Smith,pass123,pc,Coastal University
+pc_member10@example.com,Tina,Turner,pass123,pc,State University
+pc_member11@example.com,Uma,Usman,pass123,pc,University of Science
+author11@example.com,Victor,Vance,pass123,,Northern Institute
+author12@example.com,Wendy,White,pass123,,Coastal University

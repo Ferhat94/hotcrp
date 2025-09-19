@@ -1,0 +1,3 @@
+email,firstName,lastName,password,roles,affiliation
+alice.author@example.com,Alice,Anderson,pass123,,University of Excellence
+charles.reviewer@example.com,Charles,Chen,pass123,pc,Institute of Technology

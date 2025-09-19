@@ -1,0 +1,79 @@
+[
+  {
+    "title": "A Study of Advanced Algorithms",
+    "abstract": "This paper explores the performance of new algorithmic paradigms.",
+    "authors": [
+      {"email": "author3@example.com"},
+      {"email": "pc_member2@example.com"}
+    ]
+  },
+  {
+    "title": "The Impact of Digital Art on Modern Culture",
+    "abstract": "An analysis of recent trends in the digital art space.",
+    "authors": [
+      {"email": "author4@example.com"}
+    ]
+  },
+  {
+    "title": "Networking Protocols for the Future Internet",
+    "abstract": "Proposing a new architecture for internet routing and communication.",
+    "authors": [
+      {"email": "pc_member3@example.com"}
+    ]
+  },
+  {
+    "title": "Machine Learning in Financial Markets",
+    "abstract": "A survey of ML techniques applied to stock market prediction.",
+    "authors": [
+      {"email": "author5@example.com"},
+      {"email": "pc_member5@example.com"}
+    ]
+  },
+  {
+    "title": "Marine Biology and Climate Change",
+    "abstract": "The effects of rising sea temperatures on coastal ecosystems.",
+    "authors": [
+      {"email": "author6@example.com"},
+      {"email": "pc_member6@example.com"}
+    ]
+  },
+  {
+    "title": "Advances in Cryogenic Engineering",
+    "abstract": "New materials and methods for achieving ultra-low temperatures.",
+    "authors": [
+      {"email": "author7@example.com"}
+    ]
+  },
+  {
+    "title": "The Philosophy of Language",
+    "abstract": "A critical examination of Wittgenstein's later works.",
+    "authors": [
+      {"email": "author8@example.com"},
+      {"email": "pc_member4@example.com"}
+    ]
+  },
+  {
+    "title": "Renaissance Art History: A New Perspective",
+    "abstract": "Re-evaluating the influence of patronage on artistic styles.",
+    "authors": [
+      {"email": "author9@example.com"},
+      {"email": "author4@example.com"}
+    ]
+  },
+  {
+    "title": "Global Logistics and Supply Chain Management",
+    "abstract": "Optimizing international supply chains in a post-pandemic world.",
+    "authors": [
+      {"email": "author10@example.com"}
+    ]
+  },
+  {
+    "title": "Sustainable Urban Planning",
+    "abstract": "Designing cities for a greener future.",
+    "authors": [
+      {"email": "pc_member10@example.com"},
+      {"email": "pc_member11@example.com"}
+    ]
+  }
+]
+
