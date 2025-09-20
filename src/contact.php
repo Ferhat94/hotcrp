@@ -3847,7 +3847,7 @@ class Contact implements JsonSerializable {
 
     /** @return bool */
    
-    function can_view_paper(PaperInfo $prow, $pdf = false) {
+    /** function can_view_paper(PaperInfo $prow, $pdf = false) {
         // root user can view everything
         if ($this->_root_user) {
             return true;
@@ -3877,7 +3877,8 @@ class Contact implements JsonSerializable {
             || ($rights->allow_pc_broad()
                 && $this->conf->time_pc_view($prow, $pdf)
                 && (!$pdf || $this->conf->check_tracks($prow, $this, Track::VIEWPDF)));
-    }
+    } */
+   
 
     /** function can_view_paper(PaperInfo $prow, $pdf = false) {
         // --- BEGIN CORRECTED REFACTORED LOGIC ---
@@ -3929,12 +3930,12 @@ class Contact implements JsonSerializable {
         }
 
         // Call our logger with the final, definitive result
-        $this->log_access_attempt($prow, "view_paper", $result);
+        $this->log_access_attempt($prow, $pdf ? "view_pdf" : "view_paper", $result);
 
         // Return the final result
         return $result;
         // --- END CORRECTED REFACTORED LOGIC ---
-    }  */
+    }  
 
     // --- We have rewritten this function to log to a CSV file. ---
     private function log_access_attempt(PaperInfo $prow, $action, $canView) {
@@ -3967,6 +3968,179 @@ class Contact implements JsonSerializable {
         $handle = fopen($log_file, "a");
         fputcsv($handle, $log_data);
         fclose($handle);
+    } */
+
+    // In Contact (or wherever your permissions live)
+
+    /** function can_view_paper(PaperInfo $prow, $pdf = false) {
+        // --- unified decision path ---
+        $result = null; // undecided
+
+        // 1) global overrides
+        if ($this->_root_user) {
+            $result = true;
+        } else if ($this->hidden_papers !== null
+                && isset($this->hidden_papers[$prow->paperId])) {
+            // chair “becomes” a user while conflicted & managed
+            $this->hidden_papers[$prow->paperId] = true;
+            $result = false;
+        } else if ($this->privChair) {
+            // chairs can view everything unless dangerous tracks say otherwise
+            $f = Track::BITS_VIEW | ($pdf ? (1 << Track::VIEWPDF) : 0);
+            if (($this->dangerous_track_mask() & $f) === 0) {
+                $result = true;
+            }
+        }
+
+        // 2) normal rights if still undecided
+        if ($result === null) {
+            $rights = $this->rights($prow);
+
+            $result =
+                // authors
+                $rights->allow_author_view()
+                // reviewers
+                || ($pdf
+                        // assigned reviewer can view PDF of withdrawn, but submitted, paper
+                        ? $rights->review_status > PaperContactInfo::CIRS_DECLINED
+                        && $prow->timeSubmitted != 0
+                        : $rights->review_status > 0)
+                // PC (tracks/time gates)
+                || ($rights->allow_pc_broad()
+                    && $this->conf->time_pc_view($prow, $pdf)
+                    && (!$pdf || $this->conf->check_tracks($prow, $this, Track::VIEWPDF)));
+        }
+
+        // 3) log exactly once with a pdf-aware action
+        $this->log_access_attempt($prow, $pdf ? "view_pdf" : "view_paper_title_and_abstract", (bool) $result);
+
+        // 4) return final decision
+        return (bool) $result;
+    } */
+
+    /**
+     * Append one row to logs/access_log.csv (UTC).
+     * Actor is the caller ($this), not $Conf->user, for correctness.
+     */
+    /**private function log_access_attempt(PaperInfo $prow, string $action, bool $allowed): void {
+        // app root = parent of src/
+        $log_dir = dirname(__DIR__) . "/logs";
+        $log_file = $log_dir . "/access_log.csv";
+
+        if (!is_dir($log_dir)) {
+            // 0775 is usually enough; recursive mkdir
+            @mkdir($log_dir, 0775, true);
+        }
+
+        $is_new = !file_exists($log_file);
+
+        // Open once, lock, write header if new, then the row
+        $fh = fopen($log_file, "a");
+        if ($fh === false) {
+            // don’t explode permission checks if logging fails
+            return;
+        }
+        // best-effort lock (avoid interleaving when running in parallel)
+        @flock($fh, LOCK_EX);
+
+        if ($is_new) {
+            fwrite($fh, "timestamp,contactId,paperId,action,result\n");
+        }
+
+        // Always log in UTC
+        $row = [
+            gmdate("c"),
+            (int) $this->contactId,
+            (int) $prow->paperId,
+            $action,
+            $allowed ? "allow" : "deny"
+        ];
+        fputcsv($fh, $row);
+
+        @flock($fh, LOCK_UN);
+        fclose($fh);
+    } */
+
+    function can_view_paper(PaperInfo $prow, $pdf = false) {
+        // --- unified decision path ---
+        $result = null; // undecided
+    
+        // 1) global overrides
+        if ($this->_root_user) {
+            $result = true;
+        } else if ($this->hidden_papers !== null
+                && isset($this->hidden_papers[$prow->paperId])) {
+            // chair “becomes” a user while conflicted & managed
+            $this->hidden_papers[$prow->paperId] = true;
+            $result = false;
+        } else if ($this->privChair) {
+            // chairs can view everything unless dangerous tracks say otherwise
+            $f = Track::BITS_VIEW | ($pdf ? (1 << Track::VIEWPDF) : 0);
+            if (($this->dangerous_track_mask() & $f) === 0) {
+                $result = true;
+            }
+        }
+    
+        // 2) normal rights if still undecided
+        if ($result === null) {
+            $rights = $this->rights($prow);
+    
+            $result =
+                // authors
+                $rights->allow_author_view()
+                // reviewers
+                || ($pdf
+                        // assigned reviewer can view PDF of withdrawn, but submitted, paper
+                        ? $rights->review_status > PaperContactInfo::CIRS_DECLINED
+                        && $prow->timeSubmitted != 0
+                        : $rights->review_status > 0)
+                // PC (tracks/time gates)
+                || ($rights->allow_pc_broad()
+                    && $this->conf->time_pc_view($prow, $pdf)
+                    && (!$pdf || $this->conf->check_tracks($prow, $this, Track::VIEWPDF)));
+        }
+    
+        // 3) log exactly once with a pdf-aware action
+        $this->log_access_attempt($prow, $pdf ? "view_pdf" : "view_paper_title_and_abstract", (bool) $result);
+    
+        // 4) return final decision
+        return (bool) $result;
+    }
+
+
+    private function log_access_attempt(PaperInfo $prow, string $action, bool $allowed): void {
+        // app root = parent of src/
+        $log_dir = dirname(__DIR__) . "/logs";
+        $log_file = $log_dir . "/access_log.csv";
+
+        if (!is_dir($log_dir)) {
+            @mkdir($log_dir, 0775, true);
+        }
+
+        $is_new = !file_exists($log_file);
+
+        $fh = @fopen($log_file, "a");
+        if ($fh === false) {
+            // don’t break permission checks if logging fails
+            return;
+        }
+        @flock($fh, LOCK_EX);
+
+        if ($is_new) {
+            fwrite($fh, "timestamp,contactId,paperId,action,result\n");
+        }
+
+        $row = [
+            gmdate("c"),
+            (int) $this->contactId,
+            (int) $prow->paperId,
+            $action,
+            $allowed ? "allow" : "deny"
+        ];
+        fputcsv($fh, $row);
+
+        @flock($fh, LOCK_UN);
+        fclose($fh);
     }
 
     /** @return ?FailureReason */
