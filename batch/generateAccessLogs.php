@@ -82,6 +82,8 @@ class GenerateLogs_Batch {
                 foreach ($papers as $prow) {
                     // Trigger permission checks you’ve instrumented
                     $u->can_view_paper($prow);
+                    $u->can_view_authors($prow);
+                    //$u->can_pc_view_incomplete_paper($prow);
                     $u->can_view_review_identity($prow);
 
                     // For each paper, check all its reviews

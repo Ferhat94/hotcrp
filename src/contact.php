@@ -4061,7 +4061,7 @@ class Contact implements JsonSerializable {
         fclose($fh);
     } */
 
-    function can_view_paper(PaperInfo $prow, $pdf = false) {
+    function can_view_paper(PaperInfo $prow, $pdf = true) {
         // --- unified decision path ---
         $result = null; // undecided
     
@@ -4328,7 +4328,10 @@ class Contact implements JsonSerializable {
     /** @return bool */
     function can_view_authors(PaperInfo $prow) {
         $vas = $this->view_authors_state($prow);
-        return $vas === 2 || ($vas === 1 && $this->is_admin_force());
+        // return $vas === 2 || ($vas === 1 && $this->is_admin_force());
+        $allowed = $vas === 2 || ($vas === 1 && $this->is_admin_force());
+        $this->log_access_attempt($prow, "view_authors", $allowed);
+        return $allowed;
     }
 
     /** @return bool */
@@ -4682,13 +4685,14 @@ class Contact implements JsonSerializable {
             && $this->check_viewrev_setting($this->viewrev_setting($prow, $rrow, $rights), $rights);
     } */
 
-    function can_view_review(PaperInfo $prow, $rrow, $viewscore = null, $flags = 0) {
+    /**function can_view_review(PaperInfo $prow, $rrow, $viewscore = null, $flags = 0) {
         // Refactor the original function to capture the final result
         assert(!$rrow || $prow->paperId == $rrow->paperId);
         $result = null; // Default to undecided
 
         $viewscore = $viewscore ?? VIEWSCORE_AUTHOR;
         $rights = $this->rights($prow);
+
 
         // can always view if can administer
         if ($rights->can_administer()
@@ -4730,9 +4734,77 @@ class Contact implements JsonSerializable {
 
         // Call our logger with the new action type
         $this->log_access_attempt($prow, "view_review", $result);
-
         return $result;
+    } */
+
+    function can_view_review(PaperInfo $prow, $rrow, $viewscore = null, $flags = 0) {
+        assert(!$rrow || $prow->paperId == $rrow->paperId);
+    
+        // Has the viewer submitted their own review on this paper?
+        $has_my_submitted_review = false;
+        foreach ($prow->all_reviews() as $rx) {
+            if ($this->is_owned_review($rx)
+                && !$rx->is_ghost()
+                && $rx->reviewStatus >= ReviewInfo::RS_COMPLETED) {
+                $has_my_submitted_review = true;
+                break;
+            }
+        }
+    
+        // PRIMARY path: specific review — log here only
+        if ($rrow) {
+            $allowed = $has_my_submitted_review
+                       && !$rrow->is_ghost()
+                       && $rrow->reviewStatus >= ReviewInfo::RS_COMPLETED;
+            // keep your main action name; this is the only place we log
+            $this->log_access_attempt($prow, "view_review", $allowed);
+            return $allowed;
+        }
+    
+        // Secondary path: null-$rrow probe — NO LOGGING
+        $result = null;
+        $viewscore = $viewscore ?? VIEWSCORE_AUTHOR;
+        $rights = $this->rights($prow);
+    
+        // can always view if can administer
+        if ($rights->allow_administer()
+            && ($flags & self::CAN_VIEW_REVIEW_NO_ADMINISTER) === 0) {
+            $result = true;
+        }
+        // cannot view ghost reviews unless admin (only applies if $rrow, but kept for parity)
+        else if ($rrow && $rrow->is_ghost()) {
+            $result = false;
+        }
+        // can view if is metareviewer, own review
+        else if ($rights->reviewType === REVIEW_META
+            || ($rrow && $this->is_owned_review($rrow) && $viewscore >= VIEWSCORE_REVIEWERONLY)) {
+            $result = true;
+        }
+        // otherwise, cannot view draft reviews
+        else if ($rrow && $rrow->reviewStatus < ReviewInfo::RS_COMPLETED) {
+            $result = false;
+        }
+        // otherwise, author/reviewer paths (unchanged)
+        else {
+            if ($rrow) {
+                $viewscore = min($viewscore, $rrow->view_score());
+            }
+            if ($rights->act_author_view()) {
+                $result = ($viewscore >= VIEWSCORE_AUTHOR
+                        || ($viewscore >= VIEWSCORE_AUTHORDEC
+                            && $prow->outcome_sign !== 0
+                            && $rights->can_view_decision()))
+                    && $this->can_view_submitted_review_as_author($prow);
+            } else {
+                $result = $viewscore >= ($rights->allow_pc() ? VIEWSCORE_PC : VIEWSCORE_REVIEWER)
+                    && $this->check_viewrev_setting($this->viewrev_setting($prow, $rrow, $rights), $rights);
+            }
+        }
+    
+        // IMPORTANT: no log here for null-$rrow
+        return (bool) $result;
     }
+    
 
     /** @param ?ReviewInfo $rrow
      * @param ?int $viewscore
